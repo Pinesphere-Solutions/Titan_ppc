@@ -17,9 +17,15 @@ from app.core.database import Base
 # Import every module's models here so they register on Base.metadata
 # and are picked up by autogenerate.
 from app.modules.auth import models as auth_models  # noqa: F401
+from app.modules.masters import models as masters_models  # noqa: F401
+from app.modules.sap_outward import models as sap_outward_models  # noqa: F401
+from app.modules.dc_verification import models as dc_verification_models  # noqa: F401
+from app.modules.deviations import models as deviations_models  # noqa: F401
+from app.modules.sap_processing import models as sap_processing_models  # noqa: F401
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.database_url)
+config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))
+
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

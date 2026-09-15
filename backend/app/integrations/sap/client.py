@@ -1,7 +1,3 @@
-"""Real SAP REST client. Endpoints/payload shapes below are placeholders —
-exact contract is pending SAP team confirmation (architecture doc Section
-13, item 1). Update the paths and payload mapping once that's available;
-nothing outside this file should need to change."""
 
 from typing import Any
 
@@ -45,3 +41,12 @@ class SAPRestClient(SAPClientInterface):
 
     async def aclose(self) -> None:
         await self._client.aclose()
+
+
+
+
+    async def fetch_movements(self) -> list[dict[str, Any]]:
+        # TODO: confirm real endpoint path and response shape with SAP team.
+        response = await self._client.get("/movements")
+        response.raise_for_status()
+        return response.json()

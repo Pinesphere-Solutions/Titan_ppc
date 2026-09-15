@@ -1,6 +1,3 @@
-"""In-memory mock SAP client for local development and testing — used
-while the real SAP integration is unconfirmed/unreachable (architecture
-doc Section 7.6). Lets M4–M13 be built and demoed end-to-end today."""
 
 from typing import Any
 
@@ -14,13 +11,76 @@ class MockSAPClient:
         return [
             {
                 "sap_document_no": "SAMPLE-0001",
-                "dc_no": "DC-0001",
-                "material_code": "MAT-001",
+                "dc_no": "DC-1001",
+                "line_item_count": 3,
+                "vendor_code": "VEND-01",
+                "vendor_name": "Sri Balaji Polishing Works",
+                "material_code": "MAT-CASE-FRONT-01",
                 "model": "MODEL-A",
-                "vendor_name": "Sample Vendor",
-                "quantity": 500,
+                "quantity_front_case": 250,
+                "quantity_back_case": 250,
                 "dispatch_date": "2026-09-01",
-            }
+                "po_number": "PO-5001",
+                "po_line_item": "10",
+                "po_quantity": 1000,
+            },
+            {
+                "sap_document_no": "SAMPLE-0002",
+                "dc_no": "DC-1002",
+                "line_item_count": 13,
+                "vendor_code": "VEND-02",
+                "vendor_name": "Coimbatore Precision Plating",
+                "material_code": "MAT-CASE-BACK-02",
+                "model": "MODEL-B",
+                "quantity_front_case": 500,
+                "quantity_back_case": 460,
+                "dispatch_date": "2026-09-03",
+                "po_number": "PO-5002",
+                "po_line_item": "10",
+                "po_quantity": 960,
+            },
+            {
+                "sap_document_no": "SAMPLE-0003",
+                "dc_no": "DC-1003",
+                "line_item_count": 1,
+                "vendor_code": "VEND-01",
+                "vendor_name": "Sri Balaji Polishing Works",
+                "material_code": "MAT-CASE-FRONT-02",
+                "model": "MODEL-A",
+                "quantity_front_case": 100,
+                "quantity_back_case": 100,
+                "dispatch_date": "2026-09-05",
+                # Second partial delivery against the SAME PO line as DC-1001.
+                "po_number": "PO-5001",
+                "po_line_item": "10",
+                "po_quantity": 1000,
+            },
+        ]
+
+    async def fetch_movements(self) -> list[dict[str, Any]]:
+        """Sample movement records covering the three confirmed movement
+        types (101 Goods Receipt, 313 Stock Transfer, 321 Quality to
+        Unrestricted). Posting date format is [OPEN] — treat this as
+        illustrative only."""
+        return [
+            {
+                "material_document_no": "MDOC-9001",
+                "movement_type": "101",
+                "dc_no": "DC-1001",
+                "posting_date": "2026-09-06",
+            },
+            {
+                "material_document_no": "MDOC-9002",
+                "movement_type": "313",
+                "dc_no": "DC-1001",
+                "posting_date": "2026-09-07",
+            },
+            {
+                "material_document_no": "MDOC-9003",
+                "movement_type": "321",
+                "dc_no": "DC-1002",
+                "posting_date": "2026-09-08",
+            },
         ]
 
     async def post_ud(self, dc_no: str, payload: dict[str, Any]) -> dict[str, Any]:
