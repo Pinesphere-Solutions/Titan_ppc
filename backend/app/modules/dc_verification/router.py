@@ -1,12 +1,13 @@
-""" DC Verification"""
 
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.integrations.mail.client import send_deviation_email
+from app.modules.deviations.models import Deviation
 from app.modules.dc_verification.schemas import DcVerificationRequest, DcVerificationResponse
 from app.modules.dc_verification.service import DcVerificationError, verify_delivery_challan
 
@@ -37,7 +38,15 @@ async def verify_dc(
     vendor_email = result.pop("vendor_email", None)
 
     if result["deviation_created"]:
+        # Reflect the actual outcome on the deviation record itself — this
+        # is what M7's list screen displays under "Vendor Notified", so it
+        # needs to say something real rather than always "pending".
+        deviation_result = await db.execute(select(Deviation).where(Deviation.id == result["deviation_id"]))
+        deviation = deviation_result.scalar_one()
+
         if vendor_email:
+            deviation.mail_status = "sent"
+            await db.commit()
             # Fire-and-forget per architecture doc Section 5.2 — vendor email
             # shouldn't block the verification response.
             background_tasks.add_task(
@@ -47,6 +56,8 @@ async def verify_dc(
                 difference_qty=result["expected_qty"] - result["actual_qty"],
             )
         else:
+            deviation.mail_status = "no_email_on_file"
+            await db.commit()
             # Vendor has no email on file yet — don't silently drop this.
             # Masters (M15) needs to be updated with the vendor's email
             # before this deviation notification can actually be sent.
@@ -56,3 +67,10 @@ async def verify_dc(
             )
 
     return DcVerificationResponse(**result)
+
+
+
+
+
+
+

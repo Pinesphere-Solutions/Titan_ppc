@@ -9,5 +9,18 @@ export const apiClient = axios.create({
   withCredentials: true, // sends the httpOnly auth cookie
 });
 
-// TODO: add a response interceptor that redirects to /login on 401,
-// and a request interceptor if a CSRF token needs to be attached.
+// A 401 here means the access token is missing or expired — there is no
+// silent refresh flow yet (see architecture doc Section 7.1's refresh
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      // Avoid a redirect loop if the 401 came from the login attempt itself.
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login?expired=1";
+      }
+    }
+    return Promise.reject(error);
+  }
+);

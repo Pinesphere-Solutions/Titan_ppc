@@ -12,6 +12,8 @@ class DispatchListItem(BaseModel):
     quantity_back_case: int | None = None
     dispatch_date: str | None = None
     verification_status: str | None = None
+    qc_ack_status: str | None = None
+    stock_level: str | None = None
 
 
 class OpenPoItem(BaseModel):

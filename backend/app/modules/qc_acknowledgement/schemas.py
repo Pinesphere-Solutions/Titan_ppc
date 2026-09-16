@@ -1,4 +1,9 @@
-"""Pydantic request/response schemas for M8 QC Acknowledgement.
-Kept separate from ORM models — see architecture doc Section 5.2."""
+from pydantic import BaseModel
 
-# TODO: define schemas for M8 QC Acknowledgement.
+
+class QcAcknowledgeResponse(BaseModel):
+    dc_no: str
+    qc_ack_status: str
+    qc_acknowledged_by: str | None
+    stock_level: str
+    ud_post_status: str

@@ -4,7 +4,7 @@ See architecture doc Section 7.1."""
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -12,7 +12,7 @@ from passlib.context import CryptContext
 from app.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 
 def hash_password(password: str) -> str:
@@ -41,22 +41,29 @@ class CurrentUser:
         self.role = role
 
 
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> CurrentUser:
+def get_current_user(
+    request: Request,
+    header_token: Annotated[str | None, Depends(oauth2_scheme)] = None,
+) -> CurrentUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    token = header_token or request.cookies.get("access_token")
+    if token is None:
+        raise credentials_exception
+
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
-        username: str | None = payload.get("sub")
-        role: str | None = payload.get("role")
+        username = payload.get("sub")
+        role = payload.get("role")
         if username is None or role is None:
             raise credentials_exception
         return CurrentUser(username=username, role=role)
-    except JWTError as exc:
-        raise credentials_exception from exc
-
+    except JWTError:
+        raise credentials_exception
 
 def require_role(*allowed_roles: str):
     """Route dependency factory — e.g. Depends(require_role("qc_team"))."""

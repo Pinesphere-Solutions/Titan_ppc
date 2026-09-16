@@ -1,3 +1,23 @@
+"""In-memory mock SAP client for local development and testing — used
+while the real SAP integration is unconfirmed/unreachable (architecture
+doc Section 7.6). Lets M4–M13 be built and demoed end-to-end today.
+
+Sample data below covers the SAP fields confirmed in the Titan SAP Data
+Mapping Module design doc (Section 3): DC Number, Line Item Count,
+Vendor Code/Name, Movement Type codes (101/313/321), and PO fields
+(po_number/po_line_item/po_quantity) needed for Open PO / Pending
+Quantity (Section 5, computed app-side per that doc's decision).
+
+Notes:
+- DC-1001 and DC-1003 deliberately share PO-5001 / line 10 — this
+  exercises the "PO fulfilled across multiple partial deliveries"
+  aggregation logic in app/integrations/sap/open_po.py.
+- DC-1004 is left deliberately unverified (pending) on every fresh sync,
+  for demonstrating DC Verification's "less" / deviation path against a
+  vendor with NO email on file (the warning-log fallback path).
+- DC-1005 is the same idea, but against VEND-02 — use this one once
+  VEND-02 has an email set, to demonstrate the real notification path
+  (the actual [mail:mock] send line, not the missing-email warning)."""
 
 from typing import Any
 
@@ -54,6 +74,36 @@ class MockSAPClient:
                 "po_number": "PO-5001",
                 "po_line_item": "10",
                 "po_quantity": 1000,
+            },
+            {
+                "sap_document_no": "SAMPLE-0004",
+                "dc_no": "DC-1004",
+                "line_item_count": 1,
+                "vendor_code": "VEND-02",
+                "vendor_name": "Coimbatore Precision Plating",
+                "material_code": "MAT-CASE-BACK-03",
+                "model": "MODEL-B",
+                "quantity_front_case": 150,
+                "quantity_back_case": 150,
+                "dispatch_date": "2026-09-10",
+                "po_number": "PO-5003",
+                "po_line_item": "10",
+                "po_quantity": 300,
+            },
+            {
+                "sap_document_no": "SAMPLE-0005",
+                "dc_no": "DC-1005",
+                "line_item_count": 1,
+                "vendor_code": "VEND-02",
+                "vendor_name": "Coimbatore Precision Plating",
+                "material_code": "MAT-CASE-BACK-04",
+                "model": "MODEL-B",
+                "quantity_front_case": 150,
+                "quantity_back_case": 150,
+                "dispatch_date": "2026-09-11",
+                "po_number": "PO-5004",
+                "po_line_item": "10",
+                "po_quantity": 300,
             },
         ]
 

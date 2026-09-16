@@ -27,11 +27,16 @@ async def health() -> dict[str, str]:
 async def list_dispatched_materials(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> list[DispatchListItem]:
-    """Read-only list for the M3 screen. Left-joins DeliveryChallan since
-    a Dispatch could theoretically exist without one yet (unlikely given
-    current mapping logic, but the join stays safe either way)."""
+    
     stmt = (
-        select(Dispatch, Vendor.name, DeliveryChallan.dc_no, DeliveryChallan.verification_status)
+        select(
+            Dispatch,
+            Vendor.name,
+            DeliveryChallan.dc_no,
+            DeliveryChallan.verification_status,
+            DeliveryChallan.qc_ack_status,
+            DeliveryChallan.stock_level,
+        )
         .join(Vendor, Dispatch.vendor_id == Vendor.id)
         .outerjoin(DeliveryChallan, DeliveryChallan.dispatch_id == Dispatch.id)
         .order_by(Dispatch.created_at.desc())
@@ -49,8 +54,10 @@ async def list_dispatched_materials(
             quantity_back_case=dispatch.quantity_back_case,
             dispatch_date=dispatch.dispatch_date,
             verification_status=verification_status,
+            qc_ack_status=qc_ack_status,
+            stock_level=stock_level,
         )
-        for dispatch, vendor_name, dc_no, verification_status in rows
+        for dispatch, vendor_name, dc_no, verification_status, qc_ack_status, stock_level in rows
     ]
 
 
@@ -58,14 +65,7 @@ async def list_dispatched_materials(
 async def sync_dispatched_materials(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, object]:
-    """Manually trigger a sync: pulls from the SAP client (mock, by
-    default per USE_MOCK_SAP_CLIENT), maps/validates each record, and
-    upserts into Vendor -> Dispatch -> DeliveryChallan.
-
-    Returns a summary rather than raising on individual record failures,
-    since one bad record shouldn't abort the whole batch — this mirrors
-    the error handling approach in the SAP mapping design doc Section 10.
-    """
+    
     sap_client = get_sap_client()
     records = await sap_client.fetch_dispatched_materials()
 
@@ -92,8 +92,6 @@ async def sync_dispatched_materials(
 async def open_po_summary(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> list[OpenPoItem]:
-    """Open PO / Pending Quantity, computed app-side per the design
-    doc's decision (Section 5): PO quantity minus received-to-date,
-    grouped by PO + line item."""
+    
     summary = await get_open_po_summary(db)
     return [OpenPoItem(**item) for item in summary]

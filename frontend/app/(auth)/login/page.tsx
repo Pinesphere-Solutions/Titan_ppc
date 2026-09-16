@@ -1,12 +1,15 @@
 "use client";
 
 // M1 Login
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionExpired = searchParams.get("expired") === "1";
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +34,12 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center">
       <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-lg border p-6">
         <h1 className="mb-4 text-xl font-semibold">PPC CBE Tracking Application</h1>
+
+        {sessionExpired && (
+          <p className="mb-3 rounded bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            Your session expired. Please sign in again.
+          </p>
+        )}
 
         <label className="mb-1 block text-sm font-medium text-gray-700">Username</label>
         <input
@@ -64,3 +73,14 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default function LoginPage() {
+  // useSearchParams requires a Suspense boundary in the App Router.
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+

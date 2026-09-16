@@ -1,4 +1,12 @@
-"""Pydantic request/response schemas for M15 Masters.
-Kept separate from ORM models — see architecture doc Section 5.2."""
 
-# TODO: define schemas for M15 Masters.
+from pydantic import BaseModel, EmailStr
+
+
+class VendorItem(BaseModel):
+    code: str
+    name: str
+    email: str | None = None
+
+
+class VendorEmailUpdateRequest(BaseModel):
+    email: EmailStr

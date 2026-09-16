@@ -43,7 +43,7 @@ export default async function SAPMaterialOutwardPage() {
     <div className="p-6">
       <h1 className="mb-1 text-xl font-semibold">M3 — SAP Material Outward</h1>
       <p className="mb-4 text-sm text-gray-500">
-        Materials dispatched from Titan to vendors, synced from SAP.
+        Materials dispatched from Titan to vendors.
       </p>
 
       {items.length === 0 ? (

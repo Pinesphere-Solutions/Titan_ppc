@@ -1,7 +1,8 @@
 
 import uuid
+from datetime import datetime
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,5 +24,16 @@ class DeliveryChallan(Base, AuditMixin):
     # Pending Quantity). Null until the DC is actually verified.
     actual_front_case: Mapped[int | None] = mapped_column(nullable=True)
     actual_back_case: Mapped[int | None] = mapped_column(nullable=True)
+
+    # M8 QC Acknowledgement
+    qc_ack_status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
+    qc_acknowledged_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    qc_acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Level 2 -> Level 1 stock movement, triggered by QC acknowledgement
+    stock_level: Mapped[str] = mapped_column(String(20), default="level_2", nullable=False)
+
+    # M9 SAP Processing — UD Post triggered once at Level 1
+    ud_post_status: Mapped[str] = mapped_column(String(20), default="not_posted", nullable=False)
 
     dispatch: Mapped["Dispatch"] = relationship()
