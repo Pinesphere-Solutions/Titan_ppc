@@ -1,3 +1,4 @@
+"""Pydantic request/response schemas for M7 Deviation Management."""
 
 from datetime import datetime
 
@@ -14,4 +15,13 @@ class DeviationItem(BaseModel):
     difference_qty: int
     mail_status: str
     vendor_status: str
+    resolved_by: str | None = None
+    resolved_at: datetime | None = None
     created_at: datetime
+
+
+class DeviationResolveResponse(BaseModel):
+    dc_no: str
+    vendor_status: str
+    resolved_by: str
+    resolved_at: datetime

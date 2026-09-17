@@ -1,12 +1,17 @@
-"""M2 Dashboard — see architecture doc Section 5.2.
-TODO: implement real endpoints; this placeholder confirms the module is
-wired into the app and reachable."""
 
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
+from app.modules.dashboard.schemas import DashboardSummary
+from app.modules.dashboard.service import get_dashboard_summary
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
-@router.get("/health")
-async def health() -> dict[str, str]:
-    return {"module": "M2 Dashboard", "status": "not_yet_implemented"}
+@router.get("/summary", response_model=DashboardSummary)
+async def dashboard_summary(db: Annotated[AsyncSession, Depends(get_db)]) -> DashboardSummary:
+    summary = await get_dashboard_summary(db)
+    return DashboardSummary(**summary)

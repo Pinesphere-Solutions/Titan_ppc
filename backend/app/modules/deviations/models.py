@@ -1,7 +1,8 @@
 
 import uuid
+from datetime import datetime
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -20,5 +21,8 @@ class Deviation(Base, AuditMixin):
     difference_qty: Mapped[int] = mapped_column(nullable=False)
     mail_status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
     vendor_status: Mapped[str] = mapped_column(String(20), default="awaiting_response", nullable=False)
+
+    resolved_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     delivery_challan: Mapped["DeliveryChallan"] = relationship()

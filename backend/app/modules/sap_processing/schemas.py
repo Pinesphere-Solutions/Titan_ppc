@@ -1,4 +1,10 @@
-"""Pydantic request/response schemas for M9 SAP Processing.
-Kept separate from ORM models — see architecture doc Section 5.2."""
 
-# TODO: define schemas for M9 SAP Processing.
+from pydantic import BaseModel
+
+
+class MovementItem(BaseModel):
+    material_document_no: str
+    movement_type: str
+    dc_no: str
+    posting_date: str | None = None
+    sync_status: str
