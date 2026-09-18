@@ -29,11 +29,28 @@ def create_access_token(subject: str, role: str) -> str:
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
-def create_refresh_token(subject: str) -> str:
+def create_refresh_token(subject: str, role: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days)
-    payload = {"sub": subject, "exp": expire, "type": "refresh"}
+    payload = {"sub": subject, "role": role, "exp": expire, "type": "refresh"}
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
+
+def decode_refresh_token(token: str) -> tuple[str, str]:
+    invalid_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or expired refresh token",
+    )
+    try:
+        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        if payload.get("type") != "refresh":
+            raise invalid_exception
+        username = payload.get("sub")
+        role = payload.get("role")
+        if username is None or role is None:
+            raise invalid_exception
+        return username, role
+    except JWTError:
+        raise invalid_exception
 
 class CurrentUser:
     def __init__(self, username: str, role: str):

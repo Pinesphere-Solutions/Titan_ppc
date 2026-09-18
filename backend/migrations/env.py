@@ -22,6 +22,7 @@ from app.modules.sap_outward import models as sap_outward_models  # noqa: F401
 from app.modules.dc_verification import models as dc_verification_models  # noqa: F401
 from app.modules.deviations import models as deviations_models  # noqa: F401
 from app.modules.sap_processing import models as sap_processing_models  # noqa: F401
+from app.modules.ppc_collection import models as ppc_collection_models  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))

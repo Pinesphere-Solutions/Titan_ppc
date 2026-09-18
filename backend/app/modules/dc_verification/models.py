@@ -36,4 +36,32 @@ class DeliveryChallan(Base, AuditMixin):
     # M9 SAP Processing — UD Post triggered once at Level 1
     ud_post_status: Mapped[str] = mapped_column(String(20), default="not_posted", nullable=False)
 
+    # Floor kiosk scan checkpoints — Gate Security scanning material in
+    # at the gate, then Sub-con scanning it in on receipt. Same audit
+    # pattern as qc_acknowledged_at/by. Both nullable until scanned.
+    gate_entry_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    gate_entry_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    subcon_received_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    subcon_received_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    # M4 Material Receiving — categorization done at/after Sub-con receipt.
+    # Simplification note: the KT process describes this keyed on a
+    # physical "White Box" UID scanned separately from the DC. This
+    # build tracks everything at the DC level instead (one DC assumed
+    # to correspond to one physical box) — flagged to Kauverysree,
+    # pending confirmation of whether that assumption always holds.
+    receiving_category: Mapped[str | None] = mapped_column(String(20), nullable=True)  # "regular" | "rework"
+    receiving_category_set_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    receiving_category_set_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # M6 Physical Verification — per the KT process this is a distinct
+    # scan-based confirmation step after Document Verification (M5) and
+    # before SAP GRN/QC Acknowledgement. Implemented here as additive
+    # and non-blocking (does NOT gate QC Acknowledgement) so it doesn't
+    # retroactively break the already-tested M8 flow — tightening this
+    # into a hard prerequisite is a follow-up decision, not made here.
+    physical_verification_status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
+    physical_verified_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    physical_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     dispatch: Mapped["Dispatch"] = relationship()

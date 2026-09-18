@@ -18,5 +18,5 @@ async def authenticate_user(db: AsyncSession, username: str, password: str) -> t
         return None
 
     access_token = create_access_token(subject=user.username, role=role_name)
-    refresh_token = create_refresh_token(subject=user.username)
+    refresh_token = create_refresh_token(subject=user.username, role=role_name)
     return access_token, refresh_token
