@@ -105,6 +105,24 @@ class MockSAPClient:
                 "po_line_item": "10",
                 "po_quantity": 300,
             },
+            {
+                # Fresh, untouched test record — added to walk a brand new
+                # DC through the full M4-M13 pipeline end-to-end for a demo,
+                # since DC-1001/1002/1003 already completed it earlier.
+                "sap_document_no": "SAMPLE-0006",
+                "dc_no": "DC-1006",
+                "line_item_count": 1,
+                "vendor_code": "VEND-01",
+                "vendor_name": "Sri Balaji Polishing Works",
+                "material_code": "MAT-CASE-FRONT-03",
+                "model": "MODEL-A",
+                "quantity_front_case": 200,
+                "quantity_back_case": 200,
+                "dispatch_date": "2026-09-20",
+                "po_number": "PO-5005",
+                "po_line_item": "10",
+                "po_quantity": 200,
+            },
         ]
 
     async def fetch_movements(self) -> list[dict[str, Any]]:

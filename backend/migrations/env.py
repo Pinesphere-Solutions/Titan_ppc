@@ -23,6 +23,9 @@ from app.modules.dc_verification import models as dc_verification_models  # noqa
 from app.modules.deviations import models as deviations_models  # noqa: F401
 from app.modules.sap_processing import models as sap_processing_models  # noqa: F401
 from app.modules.ppc_collection import models as ppc_collection_models  # noqa: F401
+from app.modules.qa_inspection import models as qa_inspection_models  # noqa: F401
+from app.modules.zqmtl1 import models as zqmtl1_models  # noqa: F401
+from app.modules.storage import models as storage_models  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))

@@ -73,7 +73,13 @@ async def collect_material(db: AsyncSession, dc_no: str, tray_no: str, collected
 
 async def list_pending_collection(db: AsyncSession) -> list[dict]:
     stmt = (
-        select(DeliveryChallan, Vendor.name, Dispatch.material_code, Dispatch.model, Dispatch.quantity)
+        select(
+            DeliveryChallan,
+            Vendor.name,
+            Dispatch.material_code,
+            Dispatch.model,
+            (Dispatch.quantity_front_case + Dispatch.quantity_back_case).label("quantity"),
+        )
         .join(Dispatch, DeliveryChallan.dispatch_id == Dispatch.id)
         .join(Vendor, Dispatch.vendor_id == Vendor.id)
         .outerjoin(PpcCollection, PpcCollection.dc_id == DeliveryChallan.id)

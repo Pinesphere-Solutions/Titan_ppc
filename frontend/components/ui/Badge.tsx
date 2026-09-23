@@ -39,11 +39,15 @@ const STATUS_VARIANT_MAP: Record<string, BadgeVariant> = {
   resolved: "success",
   posted: "success",
   synced: "success",
+  completed: "success",
+  // info — actively being worked, not just waiting
+  in_progress: "info",
   // warning — waiting on something, not yet actioned
   pending: "warning",
   awaiting_response: "warning",
   no_email_on_file: "warning",
   not_posted: "warning",
+  waiting_for_inspection: "warning",
   // error — a real problem occurred
   reverted: "error",
 };
@@ -52,6 +56,8 @@ const STATUS_LABEL_OVERRIDES: Record<string, string> = {
   no_email_on_file: "No email on file",
   awaiting_response: "Awaiting response",
   not_posted: "Not posted",
+  waiting_for_inspection: "Waiting for inspection",
+  in_progress: "In progress",
 };
 
 export function StatusBadge({ status }: { status: string }) {
