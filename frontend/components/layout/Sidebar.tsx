@@ -38,7 +38,12 @@ export const NAV_ITEMS = [
   { href: "/storage", label: "Storage Management", icon: Warehouse },
   { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/masters", label: "Masters", icon: Database },
-  { href: "/settings", label: "Settings", icon: SettingsIcon },
+  // adminOnly: M1 Role-based Access — Settings is the only module
+  // gated by require_role("admin") on the backend today, so this is
+  // the one nav item hidden by role. Everything else stays visible to
+  // every logged-in role, since no other per-module access mapping
+  // has been defined.
+  { href: "/settings", label: "Settings", icon: SettingsIcon, adminOnly: true },
 ];
 
 /**
@@ -51,12 +56,19 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   const pathname = usePathname();
   const router = useRouter();
   const [username, setUsername] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
     apiClient
       .get<{ username: string; role: string }>("/auth/me")
-      .then((res) => setUsername(res.data.username))
-      .catch(() => setUsername(null));
+      .then((res) => {
+        setUsername(res.data.username);
+        setRole(res.data.role);
+      })
+      .catch(() => {
+        setUsername(null);
+        setRole(null);
+      });
   }, []);
 
   // Close the mobile drawer automatically whenever the route changes.
@@ -72,6 +84,8 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
       router.push("/login");
     }
   }
+
+  const visibleNavItems = NAV_ITEMS.filter((item) => !item.adminOnly || role === "admin");
 
   return (
     <>
@@ -105,7 +119,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         </div>
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (

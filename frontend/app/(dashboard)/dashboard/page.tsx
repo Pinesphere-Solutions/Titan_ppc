@@ -25,7 +25,7 @@ interface DashboardSummary {
 }
 
 async function getDashboardSummary(): Promise<DashboardSummary> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+  const baseUrl = process.env.INTERNAL_API_BASE_URL || "http://localhost:8000"; // server-side fetch — always call the local backend directly, never the public-facing (possibly relative) client base URL
   const res = await fetch(`${baseUrl}/dashboard/summary`, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`Failed to load dashboard summary (status ${res.status})`);

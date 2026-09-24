@@ -6,6 +6,7 @@
 
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Suspense, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/Button";
@@ -15,6 +16,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionExpired = searchParams.get("expired") === "1";
+  const passwordReset = searchParams.get("reset") === "1";
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -59,6 +61,13 @@ function LoginForm() {
             </div>
           )}
 
+          {passwordReset && (
+            <div className="mb-4 flex items-start gap-2 rounded-md bg-success-bg px-3 py-2.5 text-sm text-success-text">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>Your password has been reset. Please sign in with your new password.</span>
+            </div>
+          )}
+
           <div className="mb-4">
             <Input
               label="Username"
@@ -88,6 +97,12 @@ function LoginForm() {
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
+          </div>
+
+          <div className="mt-2 text-right">
+            <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+              Forgot password?
+            </Link>
           </div>
 
           {error && (

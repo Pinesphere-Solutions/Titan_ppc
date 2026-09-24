@@ -9,6 +9,13 @@
 
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api-client";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 interface DispatchListItem {
   sap_document_no: string;
@@ -30,10 +37,10 @@ interface VerifyResult {
   deviation_id: string | null;
 }
 
-const RESULT_STYLES: Record<string, string> = {
-  matched: "bg-green-100 text-green-800 border-green-300",
-  excess: "bg-blue-100 text-blue-800 border-blue-300",
-  less: "bg-red-100 text-red-800 border-red-300",
+const RESULT_VARIANT: Record<string, "success" | "info" | "error"> = {
+  matched: "success",
+  excess: "info",
+  less: "error",
 };
 
 export default function DcVerificationPage() {
@@ -99,102 +106,96 @@ export default function DcVerificationPage() {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="mb-1 text-xl font-semibold">M5 — DC Verification</h1>
-      <p className="mb-4 text-sm text-gray-500">
-        Compare physically received quantity against the expected quantity from SAP.
-      </p>
+    <div>
+      <PageHeader
+        title="DC Verification"
+        description="Compare physically received quantity against the expected quantity from SAP."
+      />
 
       {loading ? (
-        <p className="text-sm text-gray-500">Loading pending delivery challans...</p>
+        <LoadingState label="Loading pending delivery challans..." />
       ) : pendingDcs.length === 0 ? (
-        <p className="text-sm text-gray-500">
-          No delivery challans are currently pending verification.
-        </p>
+        <EmptyState
+          title="Nothing pending verification"
+          description="Delivery challans dispatched from SAP will appear here once they need verification."
+        />
       ) : (
-        <form onSubmit={handleSubmit} className="max-w-md rounded border p-4">
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Delivery Challan
-          </label>
-          <select
-            className="mb-3 w-full rounded border px-3 py-2 text-sm"
-            value={selectedDcNo}
-            onChange={(e) => setSelectedDcNo(e.target.value)}
-            required
-          >
-            <option value="">Select a DC...</option>
-            {pendingDcs.map((d) => (
-              <option key={d.dc_no ?? d.sap_document_no} value={d.dc_no ?? ""}>
-                {d.dc_no} — {d.vendor_name} ({d.material_code})
-              </option>
-            ))}
-          </select>
+        <Card className="max-w-md">
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Select
+                label="Delivery Challan"
+                value={selectedDcNo}
+                onChange={(e) => setSelectedDcNo(e.target.value)}
+                required
+              >
+                <option value="">Select a DC...</option>
+                {pendingDcs.map((d) => (
+                  <option key={d.dc_no ?? d.sap_document_no} value={d.dc_no ?? ""}>
+                    {d.dc_no} — {d.vendor_name} ({d.material_code})
+                  </option>
+                ))}
+              </Select>
 
-          {selectedDispatch && (
-            <p className="mb-3 text-xs text-gray-500">
-              Expected: {selectedDispatch.quantity_front_case ?? 0} front +{" "}
-              {selectedDispatch.quantity_back_case ?? 0} back ={" "}
-              {(selectedDispatch.quantity_front_case ?? 0) +
-                (selectedDispatch.quantity_back_case ?? 0)}{" "}
-              total
-            </p>
-          )}
+              {selectedDispatch && (
+                <p className="text-xs text-text-secondary">
+                  Expected: {selectedDispatch.quantity_front_case ?? 0} front +{" "}
+                  {selectedDispatch.quantity_back_case ?? 0} back ={" "}
+                  {(selectedDispatch.quantity_front_case ?? 0) +
+                    (selectedDispatch.quantity_back_case ?? 0)}{" "}
+                  total
+                </p>
+              )}
 
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Actual Front Case Qty
-          </label>
-          <input
-            type="number"
-            className="mb-3 w-full rounded border px-3 py-2 text-sm"
-            value={actualFrontCase}
-            onChange={(e) => setActualFrontCase(e.target.value)}
-            required
-            min={0}
-          />
+              <Input
+                label="Actual Front Case Qty"
+                type="number"
+                value={actualFrontCase}
+                onChange={(e) => setActualFrontCase(e.target.value)}
+                required
+                min={0}
+              />
 
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Actual Back Case Qty
-          </label>
-          <input
-            type="number"
-            className="mb-4 w-full rounded border px-3 py-2 text-sm"
-            value={actualBackCase}
-            onChange={(e) => setActualBackCase(e.target.value)}
-            required
-            min={0}
-          />
+              <Input
+                label="Actual Back Case Qty"
+                type="number"
+                value={actualBackCase}
+                onChange={(e) => setActualBackCase(e.target.value)}
+                required
+                min={0}
+              />
 
-          {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+              {error && <ErrorState message={error} />}
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {submitting ? "Verifying..." : "Verify"}
-          </button>
-        </form>
+              <Button type="submit" loading={submitting} className="w-full">
+                {submitting ? "Verifying..." : "Verify"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
       {result && (
-        <div
-          className={`mt-4 max-w-md rounded border p-4 text-sm ${
-            RESULT_STYLES[result.result] ?? ""
-          }`}
-        >
-          <p className="mb-1 font-semibold">
-            DC {result.dc_no} — {result.result.toUpperCase()}
-          </p>
-          <p>Expected: {result.expected_qty}, Actual: {result.actual_qty}</p>
-          <p>Status: {result.verification_status}</p>
-          {result.deviation_created && (
-            <p className="mt-1 font-medium">
-              A deviation record was created and the vendor has been notified.
+        <Card className="mt-4 max-w-md">
+          <CardContent className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-text-primary">DC {result.dc_no}</p>
+              <Badge variant={RESULT_VARIANT[result.result] ?? "neutral"}>
+                {result.result.toUpperCase()}
+              </Badge>
+            </div>
+            <p className="text-sm text-text-secondary">
+              Expected: {result.expected_qty}, Actual: {result.actual_qty}
             </p>
-          )}
-        </div>
+            <p className="text-sm text-text-secondary">Status: {result.verification_status}</p>
+            {result.deviation_created && (
+              <p className="mt-1 text-sm font-medium text-text-primary">
+                A deviation record was created and the vendor has been notified.
+              </p>
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );
 }
-
