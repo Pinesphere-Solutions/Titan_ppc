@@ -123,6 +123,60 @@ class MockSAPClient:
                 "po_line_item": "10",
                 "po_quantity": 200,
             },
+            {
+                # Fresh record for review purposes — left untouched at
+                # SAP Outward so a reviewer can walk it through the
+                # pipeline stage by stage themselves.
+                "sap_document_no": "SAMPLE-0007",
+                "dc_no": "DC-1007",
+                "line_item_count": 1,
+                "vendor_code": "VEND-02",
+                "vendor_name": "Coimbatore Precision Plating",
+                "material_code": "MAT-CASE-BACK-05",
+                "model": "MODEL-B",
+                "quantity_front_case": 180,
+                "quantity_back_case": 180,
+                "dispatch_date": "2026-09-22",
+                "po_number": "PO-5006",
+                "po_line_item": "10",
+                "po_quantity": 180,
+            },
+            {
+                # Fresh record for review purposes — will be pushed a
+                # couple of stages in ahead of time so the reviewer sees
+                # pending items sitting in mid-pipeline queues too.
+                "sap_document_no": "SAMPLE-0008",
+                "dc_no": "DC-1008",
+                "line_item_count": 1,
+                "vendor_code": "VEND-01",
+                "vendor_name": "Sri Balaji Polishing Works",
+                "material_code": "MAT-CASE-FRONT-04",
+                "model": "MODEL-A",
+                "quantity_front_case": 220,
+                "quantity_back_case": 220,
+                "dispatch_date": "2026-09-22",
+                "po_number": "PO-5007",
+                "po_line_item": "10",
+                "po_quantity": 220,
+            },
+            {
+                # Fresh record for review purposes — will be walked all
+                # the way through so the reviewer also sees a fully
+                # completed pipeline trail (SAP Outward through Storage).
+                "sap_document_no": "SAMPLE-0009",
+                "dc_no": "DC-1009",
+                "line_item_count": 1,
+                "vendor_code": "VEND-02",
+                "vendor_name": "Coimbatore Precision Plating",
+                "material_code": "MAT-CASE-BACK-06",
+                "model": "MODEL-B",
+                "quantity_front_case": 190,
+                "quantity_back_case": 190,
+                "dispatch_date": "2026-09-22",
+                "po_number": "PO-5008",
+                "po_line_item": "10",
+                "po_quantity": 190,
+            },
         ]
 
     async def fetch_movements(self) -> list[dict[str, Any]]:

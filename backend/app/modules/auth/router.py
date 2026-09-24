@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import (
     CurrentUser,
@@ -11,10 +12,24 @@ from app.core.security import (
     decode_refresh_token,
     get_current_user,
 )
-from app.modules.auth.schemas import CurrentUserResponse, LoginRequest, TokenResponse
-from app.modules.auth.service import authenticate_user
+from app.integrations.mail.client import send_password_reset_email
+from app.modules.auth.schemas import (
+    CurrentUserResponse,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
+    LoginRequest,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
+    TokenResponse,
+)
+from app.modules.auth.service import AuthError, authenticate_user, request_password_reset, reset_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+# Generic response for forgot-password — always the same message whether
+# or not the username exists, so this endpoint can't be used to check
+# which emails have accounts.
+_FORGOT_PASSWORD_MESSAGE = "If an account exists for that email, we've sent a password reset link."
 
 
 def _set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
@@ -23,14 +38,15 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
         value=access_token,
         httponly=True,
         secure=True,
-        samesite="strict",
+        samesite="none",  # frontend and backend can be on different origins
+        # (e.g. two separate tunnel domains for external review)
     )
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
         secure=True,
-        samesite="strict",
+        samesite="none",
         path="/auth/refresh",  # only sent back on the refresh call
     )
 
@@ -75,3 +91,39 @@ async def logout(response: Response) -> dict[str, str]:
 @router.get("/me", response_model=CurrentUserResponse)
 async def me(current_user: Annotated[CurrentUser, Depends(get_current_user)]) -> CurrentUserResponse:
     return CurrentUserResponse(username=current_user.username, role=current_user.role)
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse)
+async def forgot_password(
+    payload: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ForgotPasswordResponse:
+    result = await request_password_reset(db, payload.username)
+    if result is not None:
+        user, raw_token = result
+        await db.commit()
+
+        reset_link = f"{settings.frontend_base_url}/reset-password?token={raw_token}"
+        # Fire-and-forget, same pattern as the vendor deviation email —
+        # don't make the user wait on SMTP.
+        background_tasks.add_task(send_password_reset_email, to_address=user.username, reset_link=reset_link)
+    else:
+        await db.rollback()
+
+    return ForgotPasswordResponse(message=_FORGOT_PASSWORD_MESSAGE)
+
+
+@router.post("/reset-password", response_model=ResetPasswordResponse)
+async def reset_password_route(
+    payload: ResetPasswordRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ResetPasswordResponse:
+    try:
+        await reset_password(db, payload.token, payload.new_password)
+        await db.commit()
+    except AuthError as e:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+
+    return ResetPasswordResponse(message="Your password has been reset. You can now sign in.")

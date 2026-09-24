@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7
 
+    # Frontend — used to build absolute links sent in emails (e.g. the
+    # M1 Forgot Password reset link). Override via env when the frontend
+    # is served from a tunnel or a real domain instead of localhost.
+    frontend_base_url: str = "http://localhost:3000"
+
     # SAP integration — REST API (confirmed). Exact endpoints/auth pending
     # SAP team confirmation (architecture doc Section 13, item 1).
     sap_base_url: str | None = None
